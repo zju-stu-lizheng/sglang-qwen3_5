@@ -48,8 +48,8 @@ from sglang.srt.configs import (
     Qwen3VLMoeConfig,
     Step3VLConfig,
 )
-from sglang.srt.configs.qwen3_vl import Qwen3VLProcessor
 from sglang.srt.configs.internvl import InternVLChatConfig
+from sglang.srt.configs.qwen3_vl import Qwen3VLProcessor
 from sglang.srt.connector import create_remote_connector
 from sglang.srt.utils import is_remote_url, logger, lru_cache_frozenset
 
