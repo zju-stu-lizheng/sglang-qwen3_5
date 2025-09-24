@@ -609,6 +609,11 @@ class Qwen3VLForConditionalGeneration(nn.Module):
         super().__init__()
 
         self.config = config
+        if hasattr(config, "text_config"):
+            for key, value in config.text_config.__dict__.items():
+                if not hasattr(self.config, key):
+                    setattr(self.config, key, value)
+
         self.visual = Qwen3_VisionTransformer(
             config.vision_config,
             norm_eps=getattr(config, "rms_norm_eps", 1e-6),

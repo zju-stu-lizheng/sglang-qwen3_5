@@ -165,6 +165,10 @@ class Qwen3VLMoeForConditionalGeneration(Qwen3VLForConditionalGeneration):
     ):
         super(Qwen3VLForConditionalGeneration, self).__init__()
         self.config = config
+        if hasattr(config, "text_config"):
+            for key, value in config.text_config.__dict__.items():
+                if not hasattr(self.config, key):
+                    setattr(self.config, key, value)
 
         self.visual = Qwen3_VisionTransformer(
             config.vision_config,

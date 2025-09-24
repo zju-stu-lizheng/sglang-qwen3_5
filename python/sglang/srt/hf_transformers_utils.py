@@ -44,8 +44,11 @@ from sglang.srt.configs import (
     LongcatFlashConfig,
     MultiModalityConfig,
     Qwen3NextConfig,
+    Qwen3VLConfig,
+    Qwen3VLMoeConfig,
     Step3VLConfig,
 )
+from sglang.srt.configs.qwen3_vl import Qwen3VLProcessor
 from sglang.srt.configs.internvl import InternVLChatConfig
 from sglang.srt.connector import create_remote_connector
 from sglang.srt.utils import is_remote_url, logger, lru_cache_frozenset
@@ -61,6 +64,8 @@ _CONFIG_REGISTRY: Dict[str, Type[PretrainedConfig]] = {
     Step3VLConfig.model_type: Step3VLConfig,
     LongcatFlashConfig.model_type: LongcatFlashConfig,
     Qwen3NextConfig.model_type: Qwen3NextConfig,
+    Qwen3VLConfig.model_type: Qwen3VLConfig,
+    Qwen3VLMoeConfig.model_type: Qwen3VLMoeConfig,
     DotsVLMConfig.model_type: DotsVLMConfig,
 }
 
@@ -384,6 +389,14 @@ def get_processor(
     try:
         if "InternVL3_5" in tokenizer_name:
             processor = AutoTokenizer.from_pretrained(
+                tokenizer_name,
+                *args,
+                trust_remote_code=trust_remote_code,
+                revision=revision,
+                **kwargs,
+            )
+        elif config.model_type in {"qwen3_vl", "qwen3_vl_moe"}:
+            processor = Qwen3VLProcessor.from_pretrained(
                 tokenizer_name,
                 *args,
                 trust_remote_code=trust_remote_code,
