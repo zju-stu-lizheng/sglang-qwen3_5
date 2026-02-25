@@ -1071,7 +1071,12 @@ class Qwen3_5ForConditionalGeneration(Qwen3VLForConditionalGeneration):
         )
 
         loaded_params: Set[str] = set()
+
         params_dict = dict(self.named_parameters(remove_duplicate=False))
+        print("=== All parameter names in params_dict ===")
+        for param_name in params_dict.keys():
+            print(f"Param: {param_name}")
+        print("=== End of parameter names ===")
         for name, loaded_weight in weights:
             if "rotary_emb.inv_freq" in name:
                 continue
@@ -1083,7 +1088,7 @@ class Qwen3_5ForConditionalGeneration(Qwen3VLForConditionalGeneration):
                 name = name.replace(".self_attn", "")
 
             for param_name, weight_name, shard_id in stacked_params_mapping:
-                print(param_name, weight_name, shard_id)
+                print(name, param_name, weight_name, shard_id, loaded_weight.shape)
                 if weight_name not in name:
                     continue
 

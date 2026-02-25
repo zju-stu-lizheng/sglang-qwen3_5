@@ -288,10 +288,13 @@ class ModelOptQuantConfig(QuantizationConfig):
         from sglang.srt.layers.moe.fused_moe_triton import FusedMoE
 
         if isinstance(layer, LinearBase):
+            print(f"Checking layer: {prefix}")
             if is_layer_skipped(
                 prefix, self.exclude_modules, self.packed_modules_mapping
             ) or self.is_layer_excluded(prefix):
+                print(f"Layer skipped: {prefix}")
                 return UnquantizedLinearMethod()
+            print(f"Returning Linear method for layer: {prefix}")
             return Linear(self)
         elif self.kv_cache_quant_algo and isinstance(layer, RadixAttention):
             return ModelOptFp8KVCacheMethod(self)
