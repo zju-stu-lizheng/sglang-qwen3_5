@@ -853,7 +853,7 @@ class Qwen3_5MoeForCausalLM(Qwen3_5ForCausalLM):
             num_experts=self.config.num_experts,
         )
 
-        # Skip loading extra parameters for GPTQ/modelopt models.
+        # Skip loading extra parameters for GPTQ models.
         ignore_suffixes = (
             ".bias",
             "_bias",
@@ -861,9 +861,7 @@ class Qwen3_5MoeForCausalLM(Qwen3_5ForCausalLM):
             "_k_scale",
             ".v_scale",
             "_v_scale",
-            ".weight_scale",
             "_weight_scale",
-            ".input_scale",
             "_input_scale",
         )
 
@@ -912,7 +910,9 @@ class Qwen3_5MoeForCausalLM(Qwen3_5ForCausalLM):
                 name = name.replace(".self_attn", "")
 
             for param_name, weight_name, shard_id in stacked_params_mapping:
-                if "experts.gate_up_proj" in name or "experts.down_proj" in name:
+                if name.endswith("experts.gate_up_proj") or name.endswith(
+                    "experts.down_proj"
+                ):
                     is_fused_expert = True
                     expert_params_mapping = fused_expert_params_mapping
 
@@ -929,7 +929,7 @@ class Qwen3_5MoeForCausalLM(Qwen3_5ForCausalLM):
                 if "mlp.experts" in name:
                     continue
                 name = name.replace(weight_name, param_name)
-                # Skip loading extra parameters for GPTQ/modelopt models.
+                # Skip loading extra parameters for GPTQ models.
                 if name.endswith(ignore_suffixes) and name not in params_dict:
                     continue
 
@@ -978,7 +978,7 @@ class Qwen3_5MoeForCausalLM(Qwen3_5ForCausalLM):
                                 num_experts,
                             )
                     else:
-                        # Skip loading extra parameters for GPTQ/modelopt models.
+                        # Skip loading extra parameters for GPTQ models.
                         if (
                             name_mapped.endswith(ignore_suffixes)
                             and name_mapped not in params_dict
@@ -1003,7 +1003,7 @@ class Qwen3_5MoeForCausalLM(Qwen3_5ForCausalLM):
                         # This is an expert weight but not mapped to this rank, skip all remaining processing
                         continue
 
-                    # Skip loading extra parameters for GPTQ/modelopt models.
+                    # Skip loading extra parameters for GPTQ models.
                     if name.endswith(ignore_suffixes) and name not in params_dict:
                         continue
 
@@ -1159,7 +1159,7 @@ class Qwen3_5MoeForConditionalGeneration(Qwen3VLForConditionalGeneration):
             num_experts=self.config.num_experts,
         )
 
-        # Skip loading extra parameters for GPTQ/modelopt models.
+        # Skip loading extra parameters for GPTQ models.
         ignore_suffixes = (
             ".bias",
             "_bias",
@@ -1235,7 +1235,7 @@ class Qwen3_5MoeForConditionalGeneration(Qwen3VLForConditionalGeneration):
                 if "mlp.experts" in name:
                     continue
                 name = name.replace(weight_name, param_name)
-                # Skip loading extra parameters for GPTQ/modelopt models.
+                # Skip loading extra parameters for GPTQ models.
                 if name.endswith(ignore_suffixes) and name not in params_dict:
                     continue
 
@@ -1316,7 +1316,7 @@ class Qwen3_5MoeForConditionalGeneration(Qwen3VLForConditionalGeneration):
                         name = name.replace(r"attn.qkv.", r"attn.qkv_proj.")
                         name = name.replace(r"model.visual.", r"visual.")
 
-                    # Skip loading extra parameters for GPTQ/modelopt models.
+                    # Skip loading extra parameters for GPTQ models.
                     if name.endswith(ignore_suffixes) and name not in params_dict:
                         continue
 
