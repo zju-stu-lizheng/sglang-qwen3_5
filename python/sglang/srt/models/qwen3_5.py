@@ -1058,6 +1058,18 @@ class Qwen3_5ForConditionalGeneration(Qwen3VLForConditionalGeneration):
             ("gate_up_proj", "up_proj", 1),
         ]
 
+        # Skip loading extra parameters for GPTQ models.
+        ignore_suffixes = (
+            ".bias",
+            "_bias",
+            ".k_scale",
+            "_k_scale",
+            ".v_scale",
+            "_v_scale",
+            "_weight_scale",
+            "_input_scale",
+        )
+
         loaded_params: Set[str] = set()
         params_dict = dict(self.named_parameters(remove_duplicate=False))
         for name, loaded_weight in weights:
@@ -1071,24 +1083,27 @@ class Qwen3_5ForConditionalGeneration(Qwen3VLForConditionalGeneration):
                 name = name.replace(".self_attn", "")
 
             for param_name, weight_name, shard_id in stacked_params_mapping:
+                print(param_name, weight_name, shard_id)
                 if weight_name not in name:
                     continue
 
-                if "visual" in name or "mlp.experts" in name:
+                if "visual" in name:
                     continue
 
-                name = name.replace(weight_name, param_name)
-                # Skip loading extra bias for GPTQ models.
-                if name.endswith(".bias") and name not in params_dict:
+                name_mapped = name.replace(weight_name, param_name)
+                # Skip loading extra parameters for GPTQ/modelopt models.
+                if (
+                    name_mapped.endswith(ignore_suffixes)
+                    and name_mapped not in params_dict
+                ):
                     continue
-                # Skip layers on other devices.
-                # if is_pp_missing_parameter(name, self):
-                #     continue
-                if name not in params_dict:
+
+                if name_mapped not in params_dict:
                     continue
-                param = params_dict[name]
-                weight_loader = getattr(param, "weight_loader")
+                param = params_dict[name_mapped]
+                weight_loader = getattr(param, "weight_loader", default_weight_loader)
                 weight_loader(param, loaded_weight, shard_id)
+                name = name_mapped
                 break
             else:
                 if "visual" in name:
@@ -1096,9 +1111,8 @@ class Qwen3_5ForConditionalGeneration(Qwen3VLForConditionalGeneration):
                     name = name.replace(r"attn.qkv.", r"attn.qkv_proj.")
                     name = name.replace(r"model.visual.", r"visual.")
 
-                # print(name, loaded_weight.shape)
-                # Skip loading extra bias for GPTQ models.
-                if name.endswith(".bias") and name not in params_dict:
+                # Skip loading extra parameters for GPTQ/modelopt models.
+                if name.endswith(ignore_suffixes) and name not in params_dict:
                     continue
                 if name not in params_dict:
                     logger.warning(f"Parameter {name} not found in params_dict")
